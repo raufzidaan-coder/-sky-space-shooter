@@ -1,0 +1,2949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Fighting Action Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        #gameContainer {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        #gameCanvas {
+            border: 3px solid #fff;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98D8C8 100%);
+            display: block;
+            margin: 0 auto;
+        }
+        
+        #gameUI {
+            color: white;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .health-bar {
+            display: inline-block;
+            width: 200px;
+            height: 20px;
+            background: #333;
+            border: 2px solid #fff;
+            margin: 0 10px;
+            position: relative;
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(to right, #ff4444, #ff6666);
+            transition: width 0.3s ease;
+        }
+        
+        #controls {
+            color: white;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        .control-key {
+            display: inline-block;
+            background: #444;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 5px;
+            border: 1px solid #666;
+        }
+        
+        #upgradeMenu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid #fff;
+            color: white;
+            display: none;
+            z-index: 1000;
+        }
+        
+        .upgrade-button {
+            background: #444;
+            color: white;
+            border: 2px solid #666;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .upgrade-button:hover {
+            background: #666;
+            border-color: #fff;
+            transform: scale(1.05);
+        }
+        
+        .upgrade-button:disabled {
+            background: #222;
+            color: #666;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+        
+        #badgeDisplay {
+            font-size: 14px;
+            color: #ffff00;
+            margin-bottom: 5px;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #333;
+            padding: 2px 6px;
+            margin: 1px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            border: 1px solid #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .badge.legendary {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            color: #fff;
+            border-color: #ffd700;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+        }
+        
+        .badge.epic {
+            background: linear-gradient(135deg, #9b59b6, #c39bd3);
+            color: #fff;
+            border-color: #fff;
+            box-shadow: 0 0 6px rgba(155, 89, 182, 0.5);
+        }
+        
+        .badge.rare {
+            background: linear-gradient(135deg, #3498db, #5dade2);
+            color: #fff;
+            border-color: #87ceeb;
+            box-shadow: 0 0 4px rgba(52, 152, 219, 0.4);
+        }
+        
+        #badgeIndex {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid #fff;
+            color: white;
+            display: none;
+            z-index: 1001;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        #badgeStats {
+            font-size: 18px;
+            color: #ffff00;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        #badgeCategories h3 {
+            color: #00ffff;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .badgeEntry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 10px;
+            margin: 3px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        
+        .badgeEntry.unlocked {
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid rgba(255, 215, 0, 0.5);
+        }
+        
+        .badgeEntry.locked {
+            opacity: 0.6;
+        }
+        
+        .badgeDescription {
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .portal {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #9b59b6, #8e44ad, #663399);
+            box-shadow: 0 0 50px rgba(155, 89, 182, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.3);
+            animation: portalSpin 3s linear infinite, portalPulse 2s ease-in-out infinite;
+            z-index: 100;
+        }
+        
+        .portal::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.8), transparent);
+            animation: portalInnerSpin 2s linear infinite reverse;
+        }
+        
+        .portal::after {
+            content: '🌌';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            animation: portalFloat 2s ease-in-out infinite;
+        }
+        
+        @keyframes portalSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes portalInnerSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes portalPulse {
+            0%, 100% { box-shadow: 0 0 50px rgba(155, 89, 182, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.3); }
+            50% { box-shadow: 0 0 80px rgba(155, 89, 182, 1), inset 0 0 40px rgba(255, 255, 255, 0.5); }
+        }
+        
+        @keyframes portalFloat {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -60%) scale(1.1); }
+        }
+        
+        #worldTransition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #9b59b6, #663399, #000);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 5000;
+            color: white;
+            text-align: center;
+        }
+        
+        #worldTransition h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(155, 89, 182, 0.8);
+            animation: titleGlow 2s ease-in-out infinite;
+        }
+        
+        #worldTransition p {
+            font-size: 20px;
+            margin: 10px 0;
+            color: #ddd;
+        }
+        
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 0 0 20px rgba(155, 89, 182, 0.8); }
+            50% { text-shadow: 0 0 40px rgba(155, 89, 182, 1); }
+        }
+        
+        .world-indicator {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #9b59b6;
+            font-size: 16px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: none;
+            border: 2px solid #9b59b6;
+            box-shadow: 0 0 10px rgba(155, 89, 182, 0.5);
+        }
+        
+        #loginMenu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        #loginContainer {
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid #fff;
+            color: white;
+            text-align: center;
+            min-width: 400px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+        }
+        
+        #loginContainer h1 {
+            margin-bottom: 30px;
+            font-size: 32px;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        .login-options {
+            margin: 20px 0;
+        }
+        
+        .gmail-button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #ea4335, #c5221f);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(234, 67, 53, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .gmail-button:hover {
+            background: linear-gradient(135deg, #c5221f, #ea4335);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(234, 67, 53, 0.5);
+        }
+        
+        .gmail-icon {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #ea4335;
+            font-size: 14px;
+        }
+        
+        .divider {
+            margin: 20px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #666;
+        }
+        
+        .divider span {
+            background: rgba(0, 0, 0, 0.95);
+            padding: 0 15px;
+            color: #aaa;
+            font-size: 14px;
+            position: relative;
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #666;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-color: #00ffff;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+        
+        .login-input::placeholder {
+            color: #aaa;
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #00ffff, #0099cc);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+        }
+        
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.5);
+        }
+        
+        .login-button:active {
+            transform: translateY(0);
+        }
+        
+        #gameModeMenu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1999;
+        }
+        
+        #gameModeContainer {
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid #fff;
+            color: white;
+            text-align: center;
+            min-width: 500px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+        }
+        
+        #gameModeContainer h2 {
+            margin-bottom: 30px;
+            font-size: 28px;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        .mode-button {
+            width: 100%;
+            padding: 20px;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #444, #666);
+            border: 2px solid #888;
+            border-radius: 15px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .mode-button:hover {
+            background: linear-gradient(135deg, #555, #777);
+            border-color: #00ffff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.3);
+        }
+        
+        .mode-button.singleplayer {
+            background: linear-gradient(135deg, #00ff00, #00cc00);
+            border-color: #00ff00;
+        }
+        
+        .mode-button.multiplayer {
+            background: linear-gradient(135deg, #ff00ff, #cc00cc);
+            border-color: #ff00ff;
+        }
+        
+        .mode-button.back {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            border-color: #ff4444;
+        }
+        
+        #userDisplay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        #adminPanel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.98);
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid #ff0000;
+            color: white;
+            display: none;
+            z-index: 3000;
+            min-width: 400px;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+        }
+        
+        #adminPanel h2 {
+            color: #ff0000;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+        }
+        
+        .admin-button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            border: 2px solid #ff4444;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .admin-button:hover {
+            background: linear-gradient(135deg, #ff4444, #ff0000);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+        }
+        
+        .admin-button.close {
+            background: linear-gradient(135deg, #666, #444);
+            border-color: #888;
+        }
+        
+        .admin-button.close:hover {
+            background: linear-gradient(135deg, #777, #555);
+        }
+        
+        #adminStatus {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #ff0000;
+            font-size: 12px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: none;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        #commandInput {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #ff4444;
+            border-radius: 5px;
+            color: white;
+            font-size: 14px;
+            font-family: monospace;
+        }
+        
+        #commandOutput {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #666;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            color: #00ff00;
+        }
+        
+        @keyframes slideInRight {
+            0% { transform: translateX(100%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOutRight {
+            0% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="userDisplay">
+        Logged in as: <span id="userEmail"></span>
+    </div>
+    
+    <div id="loginMenu">
+        <div id="loginContainer">
+            <h1>🎮 Fighting Action Game 🎮</h1>
+            <h2>Login to Play</h2>
+            
+            <div class="login-options">
+                <button onclick="quickAdminLogin()" class="admin-button" style="background: linear-gradient(135deg, #ff0000, #cc0000); border: 2px solid #ff4444; margin-bottom: 10px;">
+                    🔧 QUICK ADMIN LOGIN
+                </button>
+                <button onclick="gmailLogin()" class="gmail-button">
+                    <div class="gmail-icon">G</div>
+                    Continue with Gmail
+                </button>
+            </div>
+            
+            <div class="divider">
+                <span>OR</span>
+            </div>
+            
+            <input type="email" id="emailInput" class="login-input" placeholder="Enter any email address" required>
+            <button onclick="login()" class="login-button">Login with Email</button>
+            
+            <div style="margin-top: 20px; color: #aaa; font-size: 14px;">
+                💡 Use Gmail for quick login or any email to play
+            </div>
+        </div>
+    </div>
+    
+    <div id="gameModeMenu">
+        <div id="gameModeContainer">
+            <h2>Select Game Mode</h2>
+            <button onclick="startSingleplayer()" class="mode-button singleplayer">🎮 Single Player</button>
+            <button onclick="startMultiplayer()" class="mode-button multiplayer">👥 Multiplayer</button>
+            <button onclick="logout()" class="mode-button back">🚪 Logout</button>
+        </div>
+    </div>
+    
+    <div id="adminStatus">ADMIN MODE</div>
+    <div id="worldIndicator" class="world-indicator">World 1</div>
+    
+    <div id="adminPanel">
+        <h2>🔧 ADMIN PANEL 🔧</h2>
+        <div id="commandOutput"></div>
+        <input type="text" id="commandInput" placeholder="Enter admin command..." onkeypress="handleAdminCommand(event)">
+        <button onclick="executeAdminCommand()" class="admin-button">Execute Command</button>
+        <button onclick="addUpgradePoints()" class="admin-button">+1000 Upgrade Points</button>
+        <button onclick="addGems()" class="admin-button">+100 Gems</button>
+        <button onclick="maxStats()" class="admin-button">Max All Stats</button>
+        <button onclick="instantWin()" class="admin-button">Instant Win Level</button>
+        <button onclick="toggleGodMode()" class="admin-button">Toggle God Mode</button>
+        <button onclick="spawnBoss()" class="admin-button">Spawn Random Boss</button>
+        <button onclick="clearAllData()" class="admin-button">Clear All User Data</button>
+        <button onclick="listUsers()" class="admin-button">List All Users</button>
+        <button onclick="showJoinHistory()" class="admin-button">👥 View Join History</button>
+        <button onclick="closeAdminPanel()" class="admin-button close">Close Panel (J)</button>
+    </div>
+    
+    <div id="worldTransition">
+        <div>
+            <h1>🌌 PORTAL ACTIVATED 🌌</h1>
+            <p>Entering the Next World...</p>
+            <p id="worldInfo">World 2 - Enhanced Difficulty</p>
+            <p style="font-size: 16px; color: #aaa; margin-top: 20px;">All progress will be reset</p>
+            <p style="font-size: 14px; color: #888;">Enemies are now stronger and more challenging</p>
+        </div>
+    </div>
+    
+    <div id="gameContainer" style="display: none;">
+        <div id="gameUI">
+            <div id="levelDisplay">Level: 1</div>
+            <div id="rebirthDisplay">Rebirths: 0</div>
+            <div id="badgeDisplay">Badges: <span id="badgeContainer"></span></div>
+            <div>
+                <span>Player 1</span>
+                <div class="health-bar">
+                    <div id="playerHealth" class="health-fill" style="width: 100%"></div>
+                </div>
+                <span>VS</span>
+                <div class="health-bar">
+                    <div id="enemyHealth" class="health-fill" style="width: 100%"></div>
+                </div>
+                <span id="enemyType">Enemy</span>
+            </div>
+            <div id="score">Score: 0</div>
+            <div id="upgradePoints">Upgrade Points: 0</div>
+            <div id="gemDisplay">Gems: 0</div>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+        
+        <div id="controls">
+            <div><strong>Controls:</strong></div>
+            <div>
+                <span class="control-key">A/D</span> Move Left/Right
+                <span class="control-key">W</span> Jump
+                <span class="control-key">Space</span> Attack
+                <span class="control-key">Shift</span> Block
+                <span class="control-key">U</span> Upgrades
+                <span class="control-key">ESC</span> Die Instantly
+            </div>
+        </div>
+    </div>
+    
+<div id="upgradeMenu">
+        <h2>Upgrade Menu</h2>
+        <div id="menuUpgradePoints">Upgrade Points: 0</div>
+        <div id="menuGemDisplay">Gems: 0</div>
+        <div>
+            <h3>Upgrade Points Shop</h3>
+            <button class="upgrade-button" onclick="upgrade('health')">Health (+30) - Cost: 1</button>
+            <button class="upgrade-button" onclick="upgrade('damage')">Damage (+8) - Cost: 1</button>
+            <button class="upgrade-button" onclick="upgrade('defense')">Defense (+2) - Cost: 1</button>
+            <button class="upgrade-button" onclick="upgrade('speed')">Speed (+1) - Max: 30 - Cost: 1</button>
+            <button class="upgrade-button" onclick="upgrade('fireRate')">Fire Rate (-5 cooldown) - Cost: 1</button>
+        </div>
+        <div style="margin-top: 15px;">
+            <h3>Ultimate Upgrade</h3>
+            <button class="upgrade-button" onclick="ultimateUpgrade()" id="ultimateButton" style="background: linear-gradient(135deg, #ff0000, #ff6600); color: #fff; border-color: #ffd700; font-size: 18px; padding: 15px 25px;">+1M ALL STATS - Cost: 100,000 UP</button>
+        </div>
+        <div style="margin-top: 15px;">
+            <h3>Gem Shop</h3>
+            <button class="upgrade-button" onclick="gemUpgrade('shield')">Shield Effectiveness (+5%) - Cost: 5 gems</button>
+            <button class="upgrade-button" onclick="gemUpgrade('bossBonus')">Boss Gem Bonus (+20%) - Cost: 10 gems</button>
+        </div>
+        <div style="margin-top: 15px;">
+            <h3>Rebirth</h3>
+            <button class="upgrade-button" onclick="rebirth()" id="rebirthButton">Rebirth (Cost: 10 UP) - Max: 67</button>
+            <button class="upgrade-button" onclick="maxRebirth()" id="maxRebirthButton" style="background: linear-gradient(135deg, #ff00ff, #ff00aa); color: #fff; border-color: #ffd700;">MAX REBIRTH (67) - Cost: 50,000 UP</button>
+        </div>
+        <div style="margin-top: 15px;">
+            <button class="upgrade-button" onclick="openBadgeIndex()">View Badge Index</button>
+            <button class="upgrade-button" onclick="closeUpgradeMenu()">Close (U/ESC)</button>
+        </div>
+    </div>
+
+    <div id="badgeIndex">
+        <h2>Badge Index</h2>
+        <div id="badgeStats">
+            <span id="badgeCount">0</span> / <span id="totalBadges">0</span> Badges Unlocked
+        </div>
+        <div id="badgeCategories">
+            <div id="levelBadges">
+                <h3>🎯 Level Milestones</h3>
+                <div id="levelBadgeList"></div>
+            </div>
+            <div id="rebirthBadges">
+                <h3>🔄 Rebirth Milestones</h3>
+                <div id="rebirthBadgeList"></div>
+            </div>
+            <div id="gemBadges">
+                <h3>💎 Gem Collection</h3>
+                <div id="gemBadgeList"></div>
+            </div>
+            <div id="scoreBadges">
+                <h3>📊 Score Achievements</h3>
+                <div id="scoreBadgeList"></div>
+            </div>
+            <div id="bossBadges">
+                <h3>👹 Boss Hunter</h3>
+                <div id="bossBadgeList"></div>
+            </div>
+        </div>
+        <div style="margin-top: 15px;">
+            <button class="upgrade-button" onclick="closeBadgeIndex()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        class Fighter {
+            constructor(x, y, color, isPlayer = true) {
+                this.x = x;
+                this.y = y;
+                this.width = 50;
+                this.height = 80;
+                this.color = color;
+                this.isPlayer = isPlayer;
+                
+                this.velocityX = 0;
+                this.velocityY = 0;
+                this.speed = 5;
+                this.jumpPower = 15;
+                this.health = 200;
+                this.maxHealth = 200;
+                
+                this.isJumping = false;
+                this.isAttacking = false;
+                this.isBlocking = false;
+                this.attackCooldown = 0;
+                this.facing = 1;
+                
+                this.attackRange = 60;
+                this.attackDamage = 20;
+                this.attackDuration = 20;
+                this.attackTimer = 0;
+                
+                // Upgrade stats
+                this.baseSpeed = 5;
+                this.baseDamage = 20;
+                this.baseMaxHealth = 200;
+                this.baseAttackCooldown = 30;
+                
+                // Shield effectiveness
+                this.shieldEffectiveness = 0.7;
+                
+                // Defense upgrade
+                this.baseDefense = 0;
+                this.defense = 0;
+            }
+            
+            update() {
+                this.x += this.velocityX;
+                this.y += this.velocityY;
+                
+                if (this.x < 0) this.x = 0;
+                if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
+                
+                if (this.y < canvas.height - this.height - 50) {
+                    this.velocityY += 0.8;
+                } else {
+                    this.y = canvas.height - this.height - 50;
+                    this.velocityY = 0;
+                    this.isJumping = false;
+                }
+                
+                if (this.attackCooldown > 0) this.attackCooldown--;
+                if (this.attackTimer > 0) this.attackTimer--;
+                
+                if (this.attackTimer === 0) {
+                    this.isAttacking = false;
+                }
+                
+                this.velocityX *= 0.9;
+            }
+            
+            draw(ctx) {
+                ctx.save();
+                
+                if (this.isBlocking) {
+                    ctx.globalAlpha = 0.7;
+                    ctx.strokeStyle = '#00ffff';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(this.x - 5, this.y - 5, this.width + 10, this.height + 10);
+                }
+                
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(this.x + 10, this.y + 10, 10, 10);
+                ctx.fillRect(this.x + 30, this.y + 10, 10, 10);
+                
+                if (this.isAttacking && this.attackTimer > 10) {
+                    ctx.fillStyle = '#ffff00';
+                    ctx.globalAlpha = 0.7;
+                    const attackX = this.facing === 1 ? this.x + this.width : this.x - this.attackRange;
+                    ctx.fillRect(attackX, this.y + 20, this.attackRange, 20);
+                }
+                
+                ctx.restore();
+            }
+            
+            moveLeft() {
+                this.velocityX = -this.speed;
+                this.facing = -1;
+            }
+            
+            moveRight() {
+                this.velocityX = this.speed;
+                this.facing = 1;
+            }
+            
+            jump() {
+                if (!this.isJumping) {
+                    this.velocityY = -this.jumpPower;
+                    this.isJumping = true;
+                }
+            }
+            
+            attack() {
+                if (this.attackCooldown === 0 && !this.isAttacking) {
+                    this.isAttacking = true;
+                    this.attackTimer = this.attackDuration;
+                    this.attackCooldown = this.baseAttackCooldown;
+                    return true;
+                }
+                return false;
+            }
+            
+            block(isBlocking) {
+                this.isBlocking = isBlocking;
+            }
+            
+            takeDamage(damage) {
+                // Apply defense reduction first
+                damage = Math.max(1, damage - this.defense);
+                
+                // Then apply shield if blocking
+                if (this.isBlocking) {
+                    damage = Math.floor(damage * this.shieldEffectiveness);
+                }
+                
+                this.health -= damage;
+                if (this.health < 0) this.health = 0;
+                return damage;
+            }
+            
+            getAttackBox() {
+                if (!this.isAttacking || this.attackTimer <= 10) return null;
+                
+                return {
+                    x: this.facing === 1 ? this.x + this.width : this.x - this.attackRange,
+                    y: this.y + 20,
+                    width: this.attackRange,
+                    height: 20
+                };
+            }
+            
+            applyUpgrades() {
+                this.speed = this.baseSpeed;
+                this.attackDamage = this.baseDamage;
+                this.maxHealth = this.baseMaxHealth;
+                this.attackCooldown = this.baseAttackCooldown;
+                this.defense = this.baseDefense;
+            }
+        }
+
+        class Enemy extends Fighter {
+            constructor(x, y, level = 1, world = 1) {
+                super(x, y, '#ff4444', false);
+                this.aiTimer = 0;
+                this.action = 'idle';
+                this.targetDistance = 0;
+                this.level = level;
+                this.isBoss = false;
+                this.world = world;
+                
+                // Apply world difficulty multiplier
+                const worldMultiplier = this.getWorldMultiplier();
+                
+                // Scale enemy stats based on level and world
+                if (level <= 5) {
+                    // Normal scaling for early levels
+                    this.maxHealth = Math.floor((100 + (level - 1) * 20) * worldMultiplier);
+                    this.attackDamage = Math.floor((10 + (level - 1) * 3) * worldMultiplier);
+                    this.speed = (5 + (level - 1) * 0.5) * worldMultiplier;
+                } else {
+                    // Reduced scaling for higher levels
+                    const levelDiff = level - 5;
+                    this.maxHealth = Math.floor((180 + levelDiff * 10) * worldMultiplier);
+                    this.attackDamage = Math.floor((22 + levelDiff * 1) * worldMultiplier);
+                    this.speed = (7.5 + levelDiff * 0.2) * worldMultiplier;
+                }
+                this.health = this.maxHealth;
+                
+                // Update color based on world
+                this.updateColorByWorld();
+            }
+            
+            getWorldMultiplier() {
+                const multipliers = {
+                    1: 1.0,    // World 1: Normal
+                    2: 1.5,    // World 2: 50% harder
+                    3: 2.0,    // World 3: 100% harder
+                    4: 2.5,    // World 4: 150% harder
+                    5: 3.0,    // World 5: 200% harder
+                };
+                return multipliers[this.world] || 1.0;
+            }
+            
+            updateColorByWorld() {
+                const colors = {
+                    1: '#ff4444',  // Red
+                    2: '#ff8800',  // Orange
+                    3: '#ffaa00',  // Yellow
+                    4: '#ff00ff',  // Magenta
+                    5: '#00ffff',  // Cyan
+                };
+                this.color = colors[this.world] || '#ff4444';
+            }
+            
+            updateAI(player) {
+                this.aiTimer++;
+                
+                const dx = player.x - this.x;
+                const dy = player.y - this.y;
+                this.targetDistance = Math.abs(dx);
+                
+                // Smarter AI at higher levels (capped to prevent becoming too difficult)
+                const aggression = Math.min(0.6, 0.3 + (this.level - 1) * 0.03);
+                const blockChance = Math.min(0.7, 0.5 + (this.level - 1) * 0.02);
+                
+                if (this.targetDistance < 80 && Math.abs(dy) < 50) {
+                    if (Math.random() < aggression && this.attackCooldown === 0) {
+                        this.attack();
+                        this.action = 'attacking';
+                    } else if (Math.random() < blockChance) {
+                        this.block(true);
+                        this.action = 'blocking';
+                    } else {
+                        this.block(false);
+                        this.action = 'retreating';
+                        if (dx > 0) {
+                            this.moveLeft();
+                        } else {
+                            this.moveRight();
+                        }
+                    }
+                } else if (this.targetDistance > 150) {
+                    this.block(false);
+                    this.action = 'approaching';
+                    if (dx > 0) {
+                        this.moveRight();
+                    } else {
+                        this.moveLeft();
+                    }
+                    
+                    if (Math.random() < 0.02 && !this.isJumping) {
+                        this.jump();
+                    }
+                } else {
+                    this.block(false);
+                    this.action = 'circling';
+                    if (Math.random() < 0.5) {
+                        if (dx > 0) {
+                            this.moveRight();
+                        } else {
+                            this.moveLeft();
+                        }
+                    }
+                    
+                    if (Math.random() < 0.01 && !this.isJumping) {
+                        this.jump();
+                    }
+                }
+                
+                if (this.aiTimer % 60 === 0) {
+                    this.block(false);
+                }
+            }
+        }
+
+        class Boss extends Enemy {
+            constructor(x, y, bossLevel, world = 1) {
+                super(x, y, bossLevel, world);
+                this.isBoss = true;
+                this.bossLevel = bossLevel;
+                
+                // Apply world difficulty multiplier
+                const worldMultiplier = this.getWorldMultiplier();
+                
+                // Boss stats - much stronger than regular enemies (balanced scaling)
+                this.maxHealth = Math.floor((300 + (bossLevel - 1) * 80) * worldMultiplier);
+                this.health = this.maxHealth;
+                this.attackDamage = Math.floor((25 + (bossLevel - 1) * 7) * worldMultiplier);
+                this.speed = (4 + (bossLevel - 1) * 0.2) * worldMultiplier;
+                this.width = 70;
+                this.height = 100;
+                this.attackRange = 80;
+                
+                // Update boss color based on world
+                this.updateBossColorByWorld();
+            }
+            
+            updateBossColorByWorld() {
+                const colors = {
+                    1: '#8B00FF',  // Purple
+                    2: '#FF1493',  // Deep Pink
+                    3: '#FFD700',  // Gold
+                    4: '#00CED1',  // Dark Turquoise
+                    5: '#FF4500',  // Orange Red
+                };
+                this.color = colors[this.world] || '#8B00FF';
+            }
+            
+            updateAI(player) {
+                this.aiTimer++;
+                
+                const dx = player.x - this.x;
+                const dy = player.y - this.y;
+                this.targetDistance = Math.abs(dx);
+                
+                // Boss AI - more aggressive and smarter (capped scaling)
+                const aggression = Math.min(0.8, 0.5 + (this.bossLevel - 1) * 0.05);
+                const blockChance = Math.min(0.5, 0.3 + (this.bossLevel - 1) * 0.03);
+                
+                if (this.targetDistance < 100 && Math.abs(dy) < 60) {
+                    if (Math.random() < aggression && this.attackCooldown === 0) {
+                        this.attack();
+                        this.action = 'attacking';
+                    } else if (Math.random() < blockChance) {
+                        this.block(true);
+                        this.action = 'blocking';
+                    } else {
+                        this.block(false);
+                        this.action = 'retreating';
+                        if (dx > 0) {
+                            this.moveLeft();
+                        } else {
+                            this.moveRight();
+                        }
+                    }
+                } else if (this.targetDistance > 200) {
+                    this.block(false);
+                    this.action = 'approaching';
+                    if (dx > 0) {
+                        this.moveRight();
+                    } else {
+                        this.moveLeft();
+                    }
+                    
+                    // Boss jumps more often
+                    if (Math.random() < 0.05 && !this.isJumping) {
+                        this.jump();
+                    }
+                } else {
+                    this.block(false);
+                    this.action = 'circling';
+                    if (Math.random() < 0.6) {
+                        if (dx > 0) {
+                            this.moveRight();
+                        } else {
+                            this.moveLeft();
+                        }
+                    }
+                    
+                    if (Math.random() < 0.03 && !this.isJumping) {
+                        this.jump();
+                    }
+                }
+                
+                if (this.aiTimer % 45 === 0) {
+                    this.block(false);
+                }
+            }
+            
+            draw(ctx) {
+                ctx.save();
+                
+                // Boss aura effect
+                ctx.globalAlpha = 0.3;
+                ctx.strokeStyle = '#ff00ff';
+                ctx.lineWidth = 5;
+                ctx.strokeRect(this.x - 10, this.y - 10, this.width + 20, this.height + 20);
+                ctx.globalAlpha = 1;
+                
+                if (this.isBlocking) {
+                    ctx.globalAlpha = 0.7;
+                    ctx.strokeStyle = '#00ffff';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(this.x - 5, this.y - 5, this.width + 10, this.height + 10);
+                }
+                
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                
+                // Boss eyes (red and glowing)
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(this.x + 15, this.y + 15, 15, 15);
+                ctx.fillRect(this.x + 40, this.y + 15, 15, 15);
+                
+                if (this.isAttacking && this.attackTimer > 10) {
+                    ctx.fillStyle = '#ff00ff';
+                    ctx.globalAlpha = 0.7;
+                    const attackX = this.facing === 1 ? this.x + this.width : this.x - this.attackRange;
+                    ctx.fillRect(attackX, this.y + 30, this.attackRange, 30);
+                }
+                
+                ctx.restore();
+            }
+        }
+
+        // Game variables
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const playerHealthBar = document.getElementById('playerHealth');
+        const enemyHealthBar = document.getElementById('enemyHealth');
+        const scoreElement = document.getElementById('score');
+        const levelDisplay = document.getElementById('levelDisplay');
+        const upgradePointsDisplay = document.getElementById('upgradePoints');
+        const gemDisplay = document.getElementById('gemDisplay');
+        const rebirthDisplay = document.getElementById('rebirthDisplay');
+        const enemyTypeDisplay = document.getElementById('enemyType');
+        const upgradeMenu = document.getElementById('upgradeMenu');
+        
+        // World system variables
+        let currentWorld = 1;
+        let portal = null;
+        let portalSpawned = false;
+        const worldIndicator = document.getElementById('worldIndicator');
+        const worldTransition = document.getElementById('worldTransition');
+        const worldInfo = document.getElementById('worldInfo');
+        
+        // Login and game mode variables
+        let currentUser = null;
+        let gameMode = null;
+        const loginMenu = document.getElementById('loginMenu');
+        const gameModeMenu = document.getElementById('gameModeMenu');
+        const gameContainer = document.getElementById('gameContainer');
+        const userDisplay = document.getElementById('userDisplay');
+        const userEmailDisplay = document.getElementById('userEmail');
+        
+        // Admin variables
+        let isAdmin = false;
+        let godMode = false;
+        const adminPanel = document.getElementById('adminPanel');
+        const adminStatus = document.getElementById('adminStatus');
+        const commandInput = document.getElementById('commandInput');
+        const commandOutput = document.getElementById('commandOutput');
+        
+        // Admin credentials (you can change these)
+        const ADMIN_EMAIL = 'admin@game.com';
+        const ADMIN_PASSWORD = 'admin123';
+
+        const player = new Fighter(100, 200, '#4444ff');
+        let enemy = new Enemy(600, 200, 1);
+
+        let score = 0;
+        let level = 1;
+        let upgradePoints = 0;
+        let gems = 0;
+        let rebirths = 0;
+        let gameOver = false;
+        let particles = [];
+        let upgradeMenuOpen = false;
+        let bossGemBonus = 1.0;
+        let nextBossLevel = 15;
+        
+        // Badge system
+        let badges = [];
+        let joinHistory = [];
+        
+        const badgeDefinitions = {
+            // Level badges
+            level10: { name: "Lv.10", class: "rare", category: "level", description: "Reach level 10", requirement: () => level >= 10 },
+            level25: { name: "Lv.25", class: "epic", category: "level", description: "Reach level 25", requirement: () => level >= 25 },
+            level50: { name: "Lv.50", class: "epic", category: "level", description: "Reach level 50", requirement: () => level >= 50 },
+            level67: { name: "67", class: "legendary", category: "level", description: "Reach the legendary level 67", requirement: () => level >= 67 },
+            level100: { name: "Lv.100", class: "legendary", category: "level", description: "Reach level 100", requirement: () => level >= 100 },
+            
+            // Rebirth badges
+            rebirth1: { name: "R1", class: "rare", category: "rebirth", description: "Complete your first rebirth", requirement: () => rebirths >= 1 },
+            rebirth5: { name: "R5", class: "epic", category: "rebirth", description: "Complete 5 rebirths", requirement: () => rebirths >= 5 },
+            rebirth10: { name: "R10", class: "epic", category: "rebirth", description: "Complete 10 rebirths", requirement: () => rebirths >= 10 },
+            rebirth25: { name: "R25", class: "legendary", category: "rebirth", description: "Complete 25 rebirths", requirement: () => rebirths >= 25 },
+            rebirth50: { name: "R50", class: "legendary", category: "rebirth", description: "Complete 50 rebirths", requirement: () => rebirths >= 50 },
+            rebirth67: { name: "R67", class: "legendary", category: "rebirth", description: "Achieve maximum rebirths (67)", requirement: () => rebirths >= 67 },
+            
+            // Gem badges
+            gemCollector: { name: "💎", class: "rare", category: "gem", description: "Collect 50 gems", requirement: () => gems >= 50 },
+            gemMaster: { name: "💎💎", class: "epic", category: "gem", description: "Collect 200 gems", requirement: () => gems >= 200 },
+            gemLegend: { name: "💎💎💎", class: "legendary", category: "gem", description: "Collect 500 gems", requirement: () => gems >= 500 },
+            
+            // Score badges
+            highScorer: { name: "1K", class: "rare", category: "score", description: "Score 1,000 points", requirement: () => score >= 1000 },
+            scoreMaster: { name: "10K", class: "epic", category: "score", description: "Score 10,000 points", requirement: () => score >= 10000 },
+            scoreLegend: { name: "100K", class: "legendary", category: "score", description: "Score 100,000 points", requirement: () => score >= 100000 },
+            
+            // Boss badges
+            bossSlayer: { name: "B1", class: "rare", category: "boss", description: "Defeat your first boss", requirement: () => level >= 15 },
+            bossHunter: { name: "B3", class: "epic", category: "boss", description: "Defeat 3 bosses", requirement: () => level >= 45 },
+            bossDestroyer: { name: "B5", class: "legendary", category: "boss", description: "Defeat 5 bosses", requirement: () => level >= 75 }
+        };
+
+        // Upgrade costs
+        const upgradeCosts = {
+            health: 1,
+            damage: 1,
+            defense: 1,
+            speed: 1,
+            fireRate: 1
+        };
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 8;
+                this.vy = (Math.random() - 0.5) * 8;
+                this.color = color;
+                this.life = 30;
+                this.maxLife = 30;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.3;
+                this.life--;
+            }
+            
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = this.life / this.maxLife;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, 4, 4);
+                ctx.restore();
+            }
+        }
+
+        function createHitEffect(x, y) {
+            for (let i = 0; i < 10; i++) {
+                particles.push(new Particle(x, y, '#ffff00'));
+            }
+        }
+
+        function createLevelUpEffect(x, y) {
+            for (let i = 0; i < 20; i++) {
+                particles.push(new Particle(x, y, '#00ff00'));
+            }
+        }
+
+        function checkCollisions() {
+            const playerAttackBox = player.getAttackBox();
+            const enemyAttackBox = enemy.getAttackBox();
+            
+            if (playerAttackBox) {
+                if (playerAttackBox.x < enemy.x + enemy.width &&
+                    playerAttackBox.x + playerAttackBox.width > enemy.x &&
+                    playerAttackBox.y < enemy.y + enemy.height &&
+                    playerAttackBox.y + playerAttackBox.height > enemy.y) {
+                    
+                    const damage = enemy.takeDamage(player.attackDamage);
+                    createHitEffect(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
+                    score += damage;
+                    
+                    // Check if enemy is defeated
+                    if (enemy.health <= 0) {
+                        levelComplete();
+                    }
+                }
+            }
+            
+            if (enemyAttackBox) {
+                if (enemyAttackBox.x < player.x + player.width &&
+                    enemyAttackBox.x + enemyAttackBox.width > player.x &&
+                    enemyAttackBox.y < player.y + player.height &&
+                    enemyAttackBox.y + enemyAttackBox.height > player.y) {
+                    
+                    player.takeDamage(enemy.attackDamage);
+                    createHitEffect(player.x + player.width / 2, player.y + player.height / 2);
+                }
+            }
+        }
+
+function levelComplete() {
+            const isBoss = enemy.isBoss;
+            
+            if (isBoss) {
+                // Boss completion rewards
+                score += 500 * level;
+                const baseGems = 10 + Math.floor(level / 15) * 5;
+                const gemReward = Math.floor(baseGems * bossGemBonus);
+                gems += gemReward;
+                upgradePoints += 10 + rebirths;
+                
+                createLevelUpEffect(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
+                
+                // Show boss defeated message
+                setTimeout(() => {
+                    alert(`BOSS DEFEATED!\nGems earned: ${gemReward}\nUpgrade Points earned: ${10 + rebirths}`);
+                }, 100);
+                
+                // Set next boss level
+                nextBossLevel = level + 15;
+            } else {
+                // Regular level completion
+                score += 100 * level;
+                upgradePoints += 2 + rebirths + Math.floor(level / 2);
+                createLevelUpEffect(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
+            }
+            
+            level++;
+            
+            // Check for portal spawn conditions
+            checkPortalSpawn();
+            
+            // Check if next level is a boss
+            if (level >= nextBossLevel) {
+                const bossLevel = Math.floor(level / 15) + 1;
+                enemy = new Boss(600, 200, bossLevel, currentWorld);
+                enemyTypeDisplay.textContent = `BOSS Lv.${bossLevel}`;
+            } else {
+                enemy = new Enemy(600, 200, level, currentWorld);
+                enemyTypeDisplay.textContent = 'Enemy';
+            }
+            
+            // Reset player health to full between levels
+            player.health = player.maxHealth;
+            
+            saveProgress();
+            updateUI();
+        }
+        
+        function checkPortalSpawn() {
+            // Check if player meets portal requirements
+            if (rebirths >= 67 && level >= 200 && !portalSpawned) {
+                spawnPortal();
+            }
+        }
+        
+        function spawnPortal() {
+            portal = {
+                x: canvas.width / 2 - 50,
+                y: canvas.height / 2 - 50,
+                width: 100,
+                height: 100,
+                active: true
+            };
+            portalSpawned = true;
+            
+            // Create portal spawn effect
+            for (let i = 0; i < 50; i++) {
+                particles.push(new Particle(
+                    portal.x + portal.width / 2,
+                    portal.y + portal.height / 2,
+                    `hsl(${270 + Math.random() * 60}, 100%, 50%)`
+                ));
+            }
+            
+            // Show portal message
+            setTimeout(() => {
+                alert('🌌 MYSTICAL PORTAL SPAWNED! 🌌\n\nA portal to the next world has appeared!\nWalk into it to enter World ' + (currentWorld + 1) + '\n\nWarning: All progress will be reset but enemies will be harder!');
+            }, 500);
+        }
+        
+        function drawPortal(ctx) {
+            if (!portal || !portal.active) return;
+            
+            ctx.save();
+            
+            // Draw portal effect
+            const gradient = ctx.createRadialGradient(
+                portal.x + portal.width / 2, portal.y + portal.height / 2, 0,
+                portal.x + portal.width / 2, portal.y + portal.height / 2, portal.width / 2
+            );
+            gradient.addColorStop(0, 'rgba(155, 89, 182, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(142, 68, 173, 0.6)');
+            gradient.addColorStop(1, 'rgba(102, 51, 153, 0.4)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(portal.x + portal.width / 2, portal.y + portal.height / 2, portal.width / 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw spinning effect
+            ctx.translate(portal.x + portal.width / 2, portal.y + portal.height / 2);
+            ctx.rotate(Date.now() * 0.001);
+            
+            // Inner portal
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.beginPath();
+            ctx.arc(0, 0, portal.width / 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Portal symbol
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 30px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🌌', 0, 0);
+            
+            ctx.restore();
+        }
+        
+        function checkPortalCollision() {
+            if (!portal || !portal.active) return;
+            
+            // Check if player is touching the portal
+            if (player.x < portal.x + portal.width &&
+                player.x + player.width > portal.x &&
+                player.y < portal.y + portal.height &&
+                player.y + player.height > portal.y) {
+                
+                enterPortal();
+            }
+        }
+        
+        function enterPortal() {
+            // Show world transition
+            worldTransition.style.display = 'flex';
+            worldInfo.textContent = `World ${currentWorld + 1} - Enhanced Difficulty`;
+            
+            // Stop game
+            gameOver = true;
+            
+            // Transition to next world after delay
+            setTimeout(() => {
+                transitionToNextWorld();
+            }, 3000);
+        }
+        
+        function transitionToNextWorld() {
+            currentWorld++;
+            
+            // Reset all progress
+            level = 1;
+            score = 0;
+            upgradePoints = 0;
+            gems = 0;
+            rebirths = 0;
+            portalSpawned = false;
+            portal = null;
+            
+            // Reset player to base stats
+            player.baseMaxHealth = 200;
+            player.baseDamage = 20;
+            player.baseDefense = 0;
+            player.baseSpeed = 5;
+            player.baseAttackCooldown = 30;
+            player.applyUpgrades();
+            player.health = player.maxHealth;
+            player.x = 100;
+            player.y = 200;
+            
+            // Create new enemy for new world
+            enemy = new Enemy(600, 200, level, currentWorld);
+            enemyTypeDisplay.textContent = 'Enemy';
+            
+            // Update world indicator
+            worldIndicator.textContent = `World ${currentWorld}`;
+            worldIndicator.style.display = 'block';
+            
+            // Update background based on world
+            updateWorldBackground();
+            
+            // Hide transition and resume game
+            worldTransition.style.display = 'none';
+            gameOver = false;
+            
+            // Show world entry message
+            setTimeout(() => {
+                alert(`🌌 WELCOME TO WORLD ${currentWorld}! 🌌\n\nEnemies are now ${getWorldDifficultyText()} harder!\nAll progress has been reset.\nGood luck, warrior!`);
+            }, 500);
+            
+            saveProgress();
+            updateUI();
+        }
+        
+        function getWorldDifficultyText() {
+            const difficulties = {
+                2: '50%',
+                3: '100%',
+                4: '150%',
+                5: '200%',
+            };
+            return difficulties[currentWorld] || 'much';
+        }
+        
+        function updateWorldBackground() {
+            // Update canvas background based on current world
+            const body = document.body;
+            const worldColors = {
+                1: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',  // Blue-purple
+                2: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',  // Pink-red
+                3: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',  // Pink-yellow
+                4: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',  // Cyan-purple
+                5: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',  // Light colors
+            };
+            body.style.background = worldColors[currentWorld] || worldColors[1];
+        }
+            
+            
+
+        function updateUI() {
+            playerHealthBar.style.width = `${(player.health / player.maxHealth) * 100}%`;
+            enemyHealthBar.style.width = `${(enemy.health / enemy.maxHealth) * 100}%`;
+            scoreElement.textContent = `Score: ${score}`;
+            levelDisplay.textContent = `Level: ${level}`;
+            upgradePointsDisplay.textContent = `Upgrade Points: ${upgradePoints}`;
+            gemDisplay.textContent = `Gems: ${gems}`;
+            rebirthDisplay.textContent = `Rebirths: ${rebirths}/67`;
+            
+            updateBadgeDisplay();
+            
+            if (player.health <= 0) {
+                gameOver = true;
+            }
+        }
+
+        function drawBackground() {
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(1, '#98D8C8');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#8B7355';
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            
+            ctx.fillStyle = '#228B22';
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 10);
+        }
+
+        function drawGameOver() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            
+            if (player.health <= 0) {
+                ctx.fillText('GAME OVER!', canvas.width / 2, canvas.height / 2 - 80);
+                ctx.font = '20px Arial';
+                ctx.fillText('Your upgrade points are saved!', canvas.width / 2, canvas.height / 2 - 40);
+            } else {
+                ctx.fillText('VICTORY!', canvas.width / 2, canvas.height / 2 - 80);
+            }
+            
+            ctx.font = '24px Arial';
+            ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2);
+            ctx.fillText(`Level Reached: ${level}`, canvas.width / 2, canvas.height / 2 + 30);
+            ctx.fillText(`Upgrade Points: ${upgradePoints}`, canvas.width / 2, canvas.height / 2 + 60);
+            
+            ctx.font = '18px Arial';
+            ctx.fillText('Press U for Upgrades | Press R to Restart', canvas.width / 2, canvas.height / 2 + 100);
+            ctx.fillText('Press F5 to Reset Everything', canvas.width / 2, canvas.height / 2 + 130);
+        }
+
+        function openUpgradeMenu() {
+            upgradeMenuOpen = true;
+            upgradeMenu.style.display = 'block';
+            document.getElementById('menuUpgradePoints').textContent = `Upgrade Points: ${upgradePoints}`;
+            document.getElementById('menuGemDisplay').textContent = `Gems: ${gems}`;
+            updateUpgradeButtons();
+        }
+
+        function closeUpgradeMenu() {
+            upgradeMenuOpen = false;
+            upgradeMenu.style.display = 'none';
+        }
+
+        function upgrade(type) {
+            const cost = upgradeCosts[type];
+            if (upgradePoints >= cost) {
+                upgradePoints -= cost;
+                
+                switch(type) {
+                    case 'health':
+                        player.baseMaxHealth += 30;
+                        player.maxHealth = player.baseMaxHealth;
+                        player.health = Math.min(player.health + 30, player.maxHealth);
+                        break;
+                    case 'damage':
+                        player.baseDamage += 8;
+                        player.attackDamage = player.baseDamage;
+                        break;
+                    case 'defense':
+                        player.baseDefense += 2;
+                        player.defense = player.baseDefense;
+                        break;
+                    case 'speed':
+                        if (player.baseSpeed < 30) {
+                            player.baseSpeed += 1;
+                            player.speed = player.baseSpeed;
+                        } else {
+                            alert('Maximum speed reached (30)!');
+                            upgradePoints += upgradeCosts[type]; // Refund the cost
+                        }
+                        break;
+                    case 'fireRate':
+                        player.baseAttackCooldown = Math.max(10, player.baseAttackCooldown - 5);
+                        break;
+                }
+                
+                player.applyUpgrades();
+                updateUI();
+                updateUpgradeButtons();
+                saveProgress();
+            }
+        }
+
+        function gemUpgrade(type) {
+            switch(type) {
+                case 'shield':
+                    if (gems >= 5) {
+                        gems -= 5;
+                        player.shieldEffectiveness = Math.max(0.1, player.shieldEffectiveness - 0.05);
+                        alert(`Shield upgraded! Now blocks ${Math.floor((1 - player.shieldEffectiveness) * 100)}% damage`);
+                        saveProgress();
+                    }
+                    break;
+                case 'bossBonus':
+                    if (gems >= 10) {
+                        gems -= 10;
+                        bossGemBonus += 0.2;
+                        alert(`Boss gem bonus upgraded! Now ${(bossGemBonus * 100).toFixed(0)}% gem reward from bosses`);
+                        saveProgress();
+                    }
+                    break;
+            }
+            updateUI();
+            updateUpgradeButtons();
+        }
+
+        function rebirth() {
+            if (rebirths >= 67) {
+                alert('Maximum rebirths reached (67)!');
+                return;
+            }
+            
+            const rebirthCost = 10 + (rebirths * 10);
+            
+            if (upgradePoints < rebirthCost) {
+                alert(`You need ${rebirthCost} upgrade points to rebirth!\nYou have ${upgradePoints} upgrade points.`);
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to rebirth?\nCost: ${rebirthCost} upgrade points\nThis will reset ALL upgrades, level, and progress but increase upgrade points gained per level by 1.\nYou keep your gems and rebirth count.\nCurrent rebirths: ${rebirths}/67\nNext rebirth cost: ${rebirthCost + 10} upgrade points`)) {
+                upgradePoints -= rebirthCost;
+                rebirths++;
+                level = 1;
+                score = 0;
+                
+                // Reset ALL player upgrades to base values (preserve ultimate upgrade if purchased)
+                if (player.baseMaxHealth < 1000000) {
+                    player.baseMaxHealth = 200;
+                    player.baseDamage = 20;
+                    player.baseDefense = 0;
+                    player.baseSpeed = 5;
+                    player.baseAttackCooldown = 30;
+                }
+                player.applyUpgrades();
+                player.health = player.maxHealth;
+                
+                // Reset enemy
+                enemy = new Enemy(600, 200, level);
+                nextBossLevel = 15;
+                enemyTypeDisplay.textContent = 'Enemy';
+                
+                alert(`Rebirth complete! All upgrades reset.\nYou now get ${2 + rebirths} upgrade points per level.\nRebirths: ${rebirths}/67\nNext rebirth cost: ${10 + (rebirths * 10)} upgrade points`);
+                saveProgress();
+                updateUI();
+                updateUpgradeButtons();
+            }
+        }
+
+        function updateUpgradeButtons() {
+            const buttons = upgradeMenu.querySelectorAll('.upgrade-button');
+            buttons.forEach(button => {
+                if (button.onclick && button.onclick.toString().includes('upgrade')) {
+                    const type = button.onclick.toString().match(/upgrade\('(\w+)'\)/)[1];
+                    button.disabled = upgradePoints < upgradeCosts[type];
+                } else if (button.onclick && button.onclick.toString().includes('gemUpgrade')) {
+                    const type = button.onclick.toString().match(/gemUpgrade\('(\w+)'\)/)[1];
+                    if (type === 'shield') {
+                        button.disabled = gems < 5;
+                    } else if (type === 'bossBonus') {
+                        button.disabled = gems < 10;
+                    }
+                } else if (button.id === 'rebirthButton') {
+                    const rebirthCost = 10 + (rebirths * 10);
+                    button.disabled = rebirths >= 67 || upgradePoints < rebirthCost;
+                    button.textContent = `Rebirth (Cost: ${rebirthCost} UP) - Max: 67`;
+                } else if (button.id === 'maxRebirthButton') {
+                    const cost = 50000;
+                    const isMaxRebirth = rebirths >= 67;
+                    button.disabled = isMaxRebirth || upgradePoints < cost;
+                    if (isMaxRebirth) {
+                        button.textContent = 'MAX REBIRTH ACHIEVED!';
+                        button.style.background = 'linear-gradient(135deg, #00ff00, #00aa00)';
+                    } else {
+                        button.textContent = 'MAX REBIRTH (67) - Cost: 50,000 UP';
+                        button.style.background = 'linear-gradient(135deg, #ff00ff, #ff00aa)';
+                    }
+                } else if (button.id === 'ultimateButton') {
+                    const cost = 100000;
+                    const hasUltimate = player.baseMaxHealth >= 1000000;
+                    button.disabled = hasUltimate || upgradePoints < cost;
+                    if (hasUltimate) {
+                        button.textContent = 'ULTIMATE POWER ACHIEVED!';
+                        button.style.background = 'linear-gradient(135deg, #00ff00, #00aa00)';
+                    } else {
+                        button.textContent = '+1M ALL STATS - Cost: 100,000 UP';
+                        button.style.background = 'linear-gradient(135deg, #ff0000, #ff6600)';
+                    }
+                }
+            });
+        }
+
+        function checkBadges() {
+            badges = [];
+            
+            for (const [badgeId, badgeDef] of Object.entries(badgeDefinitions)) {
+                if (badgeDef.requirement()) {
+                    badges.push({ id: badgeId, ...badgeDef });
+                }
+            }
+        }
+
+        function updateBadgeDisplay() {
+            const container = document.getElementById('badgeContainer');
+            container.innerHTML = '';
+            
+            badges.forEach(badge => {
+                const badgeElement = document.createElement('span');
+                badgeElement.className = `badge ${badge.class}`;
+                badgeElement.textContent = badge.name;
+                badgeElement.title = `Badge: ${badge.name}`;
+                container.appendChild(badgeElement);
+            });
+        }
+
+        function openBadgeIndex() {
+            document.getElementById('badgeIndex').style.display = 'block';
+            updateBadgeIndex();
+        }
+
+        function closeBadgeIndex() {
+            document.getElementById('badgeIndex').style.display = 'none';
+        }
+
+        function updateBadgeIndex() {
+            const totalBadges = Object.keys(badgeDefinitions).length;
+            const unlockedBadges = badges.length;
+            
+            document.getElementById('badgeCount').textContent = unlockedBadges;
+            document.getElementById('totalBadges').textContent = totalBadges;
+            
+            // Clear all category lists
+            document.getElementById('levelBadgeList').innerHTML = '';
+            document.getElementById('rebirthBadgeList').innerHTML = '';
+            document.getElementById('gemBadgeList').innerHTML = '';
+            document.getElementById('scoreBadgeList').innerHTML = '';
+            document.getElementById('bossBadgeList').innerHTML = '';
+            
+            // Populate categories
+            for (const [badgeId, badgeDef] of Object.entries(badgeDefinitions)) {
+                const isUnlocked = badges.some(badge => badge.id === badgeId);
+                
+                const entry = document.createElement('div');
+                entry.className = `badgeEntry ${isUnlocked ? 'unlocked' : 'locked'}`;
+                
+                const badgeInfo = document.createElement('div');
+                badgeInfo.innerHTML = `
+                    <span class="badge ${badgeDef.class}">${badgeDef.name}</span>
+                    <div class="badgeDescription">${badgeDef.description}</div>
+                `;
+                
+                const status = document.createElement('div');
+                status.textContent = isUnlocked ? '✓' : '🔒';
+                status.style.fontSize = '16px';
+                status.style.color = isUnlocked ? '#00ff00' : '#ff6666';
+                
+                entry.appendChild(badgeInfo);
+                entry.appendChild(status);
+                
+                // Add to appropriate category
+                const categoryMap = {
+                    'level': 'levelBadgeList',
+                    'rebirth': 'rebirthBadgeList',
+                    'gem': 'gemBadgeList',
+                    'score': 'scoreBadgeList',
+                    'boss': 'bossBadgeList'
+                };
+                
+                const targetList = document.getElementById(categoryMap[badgeDef.category]);
+                if (targetList) {
+                    targetList.appendChild(entry);
+                }
+            }
+        }
+
+        function maxRebirth() {
+            const cost = 50000;
+            
+            if (upgradePoints < cost) {
+                alert(`You need ${cost} upgrade points for max rebirth!\nYou have ${upgradePoints} upgrade points.`);
+                return;
+            }
+            
+            if (rebirths >= 67) {
+                alert('You already have maximum rebirths (67)!');
+                return;
+            }
+            
+            if (confirm(`Are you ready for MAX REBIRTH?\nCost: ${cost} upgrade points\nThis will instantly set you to 67 rebirths!\nYou will get ${2 + 67} upgrade points per level!\nThis cannot be undone!`)) {
+                upgradePoints -= cost;
+                rebirths = 67;
+                
+                // Reset player upgrades to base values (preserve ultimate upgrade if purchased)
+                if (player.baseMaxHealth < 1000000) {
+                    player.baseMaxHealth = 200;
+                    player.baseDamage = 20;
+                    player.baseDefense = 0;
+                    player.baseSpeed = 5;
+                    player.baseAttackCooldown = 30;
+                }
+                player.applyUpgrades();
+                player.health = player.maxHealth;
+                
+                // Reset level and score
+                level = 1;
+                score = 0;
+                
+                // Reset enemy
+                enemy = new Enemy(600, 200, level);
+                nextBossLevel = 15;
+                enemyTypeDisplay.textContent = 'Enemy';
+                
+                // Create celebration effect
+                for (let i = 0; i < 50; i++) {
+                    particles.push(new Particle(
+                        player.x + player.width / 2,
+                        player.y + player.height / 2,
+                        `hsl(${Math.random() * 360}, 100%, 50%)`
+                    ));
+                }
+                
+                alert(`🌟 MAX REBIRTH ACHIEVED! 🌟\n\nYou now have 67 rebirths!\nYou get ${2 + rebirths} upgrade points per level!\n\nYou are now a rebirth master!`);
+                
+                saveProgress();
+                updateUI();
+                updateUpgradeButtons();
+            }
+        }
+
+        function ultimateUpgrade() {
+            const cost = 100000;
+            
+            if (upgradePoints < cost) {
+                alert(`You need ${cost} upgrade points for the ultimate upgrade!\nYou have ${upgradePoints} upgrade points.`);
+                return;
+            }
+            
+            if (confirm(`Are you ready for ultimate power?\nCost: ${cost} upgrade points\nThis will upgrade your stats!\nHealth: 1,000,000\nDamage: 1,000,000\nDefense: 1,000,000\nSpeed: 30\nFire Rate: 1,000,000 (instant attacks)\n\nThis cannot be undone!`)) {
+                upgradePoints -= cost;
+                
+                // Set all base stats to 1 million (except speed = 30)
+                player.baseMaxHealth = 1000000;
+                player.baseDamage = 1000000;
+                player.baseDefense = 1000000;
+                player.baseSpeed = 30; // Speed set to 30 instead of 1M
+                player.baseAttackCooldown = 1; // 1 million fire rate = instant attacks (1ms cooldown)
+                
+                // Apply the upgrades
+                player.applyUpgrades();
+                player.health = player.maxHealth;
+                
+                // Create massive celebration effect
+                for (let i = 0; i < 100; i++) {
+                    particles.push(new Particle(
+                        player.x + player.width / 2,
+                        player.y + player.height / 2,
+                        `hsl(${Math.random() * 360}, 100%, 50%)`
+                    ));
+                }
+                
+                alert(`🌟 ULTIMATE POWER ACHIEVED! 🌟\n\nStats upgraded!\nHealth: 1,000,000\nDamage: 1,000,000\nDefense: 1,000,000\nSpeed: 30\nFire Rate: 1,000,000\n\nYou are now unstoppable!\n\nGo conquer the universe!`);
+                
+                saveProgress();
+                updateUI();
+                updateUpgradeButtons();
+            }
+        }
+
+        function restartGame() {
+            // Reset game state but keep upgrades
+            player.health = player.maxHealth;
+            player.x = 100;
+            player.y = 200;
+            player.velocityX = 0;
+            player.velocityY = 0;
+            player.isJumping = false;
+            player.isAttacking = false;
+            player.isBlocking = false;
+            player.attackCooldown = 0;
+            
+            // Reset enemy based on current level
+            if (level >= nextBossLevel) {
+                const bossLevel = Math.floor(level / 15) + 1;
+                enemy = new Boss(600, 200, bossLevel, currentWorld);
+                enemyTypeDisplay.textContent = `BOSS Lv.${bossLevel}`;
+            } else {
+                enemy = new Enemy(600, 200, level, currentWorld);
+                enemyTypeDisplay.textContent = 'Enemy';
+            }
+            
+            // Reset game variables
+            gameOver = false;
+            particles = [];
+            
+            // Close upgrade menu if open
+            if (upgradeMenuOpen) {
+                closeUpgradeMenu();
+            }
+        }
+
+        function gameLoop() {
+            if (!gameOver && !upgradeMenuOpen) {
+                player.update();
+                enemy.update();
+                enemy.updateAI(player);
+                checkCollisions();
+                checkPortalCollision();
+                
+                particles = particles.filter(particle => {
+                    particle.update();
+                    return particle.life > 0;
+                });
+            }
+            
+            drawBackground();
+            
+            // Draw portal if active
+            drawPortal(ctx);
+            
+            player.draw(ctx);
+            enemy.draw(ctx);
+            
+            particles.forEach(particle => particle.draw(ctx));
+            
+            updateUI();
+            
+            if (gameOver) {
+                drawGameOver();
+            }
+            
+            gameLoop.animationId = requestAnimationFrame(gameLoop);
+        }
+
+        const keys = {};
+
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            
+            if (!gameOver && !upgradeMenuOpen) {
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    player.attack();
+                }
+                if (e.key.toLowerCase() === 'u') {
+                    openUpgradeMenu();
+                }
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    // Kill player instantly
+                    player.health = 0;
+                }
+            } else if (upgradeMenuOpen && e.key.toLowerCase() === 'u') {
+                closeUpgradeMenu();
+            } else if (upgradeMenuOpen && e.key === 'Escape') {
+                closeUpgradeMenu();
+            } else if (gameOver && !upgradeMenuOpen) {
+                if (e.key.toLowerCase() === 'u') {
+                    openUpgradeMenu();
+                }
+                if (e.key === 'Escape') {
+                    openUpgradeMenu();
+                }
+                if (e.key.toLowerCase() === 'r') {
+                    restartGame();
+                }
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+            
+            if (e.key === 'Shift') {
+                player.block(false);
+            }
+        });
+
+        function handleInput() {
+            if (!gameOver && !upgradeMenuOpen) {
+                if (keys['a']) {
+                    player.moveLeft();
+                }
+                if (keys['d']) {
+                    player.moveRight();
+                }
+                if (keys['w']) {
+                    player.jump();
+                }
+                if (keys['shift']) {
+                    player.block(true);
+                }
+            }
+            
+            requestAnimationFrame(handleInput);
+        }
+
+        // Login and game mode functions
+        function quickAdminLogin() {
+            console.log('🔧 Quick admin login clicked');
+            document.getElementById('emailInput').value = ADMIN_EMAIL;
+            processLogin(ADMIN_EMAIL);
+        }
+        
+        function gmailLogin() {
+            // Simulate Gmail login with predefined accounts
+            const gmailAccounts = [
+                { email: 'player@gmail.com', name: 'Player' },
+                { email: 'gamer@gmail.com', name: 'Gamer' },
+                { email: 'fighter@gmail.com', name: 'Fighter' }
+            ];
+            
+            // Create modal for account selection
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 3000;
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: white;
+                padding: 30px;
+                border-radius: 15px;
+                text-align: center;
+                max-width: 400px;
+            `;
+            
+            modalContent.innerHTML = `
+                <h2 style="margin-bottom: 20px;">Select Gmail Account</h2>
+                ${gmailAccounts.map(account => `
+                    <button onclick="selectGmailAccount('${account.email}')" style="
+                        display: block;
+                        width: 100%;
+                        padding: 15px;
+                        margin: 10px 0;
+                        background: #4285f4;
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 16px;
+                    ">${account.email}</button>
+                `).join('')}
+                <button onclick="this.parentElement.parentElement.remove()" style="
+                    display: block;
+                    width: 100%;
+                    padding: 15px;
+                    margin: 10px 0;
+                    background: #ccc;
+                    color: #333;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 16px;
+                ">Cancel</button>
+            `;
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+        }
+        
+        function selectGmailAccount(email) {
+            // Remove modal
+            document.querySelector('div[style*="position: fixed"]').remove();
+            
+            // Process Gmail login
+            processLogin(email);
+        }
+        
+        function login() {
+            const emailInput = document.getElementById('emailInput');
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                alert('Please enter an email address');
+                return;
+            }
+            
+            // Bypass email validation for admin login
+            if (email !== ADMIN_EMAIL && !validateEmail(email)) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            
+            processLogin(email);
+        }
+        
+        function processLogin(email) {
+            console.log('Processing login for:', email);
+            console.log('Admin email check:', email, '===', ADMIN_EMAIL, '=', email === ADMIN_EMAIL);
+            
+            // Check for admin login
+            if (email === ADMIN_EMAIL) {
+                console.log('Admin email detected, prompting for password...');
+                const password = prompt('Enter admin password:');
+                console.log('Password entered:', password ? '***' : 'cancelled');
+                
+                if (password === ADMIN_PASSWORD) {
+                    console.log('Admin password correct, activating admin mode...');
+                    isAdmin = true;
+                    adminStatus.style.display = 'block';
+                    adminStatus.innerHTML = `🔧 ADMIN MODE - Press J for Panel 🔧`;
+                    addAdminLog('Admin logged in successfully');
+                    showWelcomeMessage(`🔧 Admin logged in! Press J for admin panel 🔧`);
+                } else if (password !== null) {
+                    console.log('Invalid admin password');
+                    alert('Invalid admin password!');
+                    return;
+                } else {
+                    console.log('Admin password prompt cancelled');
+                    return;
+                }
+            } else {
+                // Notify admin about new user joining (if admin is logged in)
+                notifyAdminUserJoin(email);
+            }
+            
+            currentUser = email;
+            userEmailDisplay.textContent = email;
+            
+            // Show welcome message
+            if (email.includes('@gmail.com')) {
+                showWelcomeMessage(`Welcome back, ${email.split('@')[0]}! 🎮`);
+            } else {
+                showWelcomeMessage(`Welcome, ${email}! 🎮`);
+            }
+            
+            // Hide login menu and show game mode menu
+            setTimeout(() => {
+                loginMenu.style.display = 'none';
+                gameModeMenu.style.display = 'flex';
+                
+                // Load user-specific progress
+                loadUserProgress();
+            }, 1500);
+        }
+        
+        function showWelcomeMessage(message) {
+            const welcomeDiv = document.createElement('div');
+            welcomeDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, #00ff00, #00cc00);
+                color: white;
+                padding: 30px 50px;
+                border-radius: 15px;
+                font-size: 24px;
+                font-weight: bold;
+                z-index: 4000;
+                box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+                animation: welcomePulse 2s ease-in-out;
+            `;
+            welcomeDiv.textContent = message;
+            document.body.appendChild(welcomeDiv);
+            
+            setTimeout(() => {
+                if (welcomeDiv.parentNode) {
+                    welcomeDiv.parentNode.removeChild(welcomeDiv);
+                }
+            }, 2000);
+        }
+        
+        function notifyAdminUserJoin(userEmail) {
+            // Add to join history
+            const timestamp = new Date().toLocaleString();
+            const username = userEmail.split('@')[0];
+            joinHistory.push({
+                email: userEmail,
+                username: username,
+                timestamp: timestamp
+            });
+            
+            // Keep only last 20 joins
+            if (joinHistory.length > 20) {
+                joinHistory.shift();
+            }
+            
+            // Only show notification if admin is logged in
+            if (isAdmin) {
+                const notification = document.createElement('div');
+                const timeOnly = new Date().toLocaleTimeString();
+                
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 10px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    z-index: 5000;
+                    box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+                    animation: slideInRight 0.5s ease-out;
+                    max-width: 300px;
+                    border: 2px solid #fff;
+                `;
+                notification.innerHTML = `
+                    <div style="margin-bottom: 5px;">🔔 NEW USER JOINED!</div>
+                    <div style="font-size: 12px; opacity: 0.9;">
+                        👤 ${username}<br>
+                        📧 ${userEmail}<br>
+                        🕐 ${timeOnly}
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.style.animation = 'slideOutRight 0.5s ease-out';
+                        setTimeout(() => {
+                            if (notification.parentNode) {
+                                notification.parentNode.removeChild(notification);
+                            }
+                        }, 500);
+                    }
+                }, 5000);
+                
+                // Also log to console for admin
+                console.log(`🔔 NEW USER JOINED: ${userEmail} at ${timestamp}`);
+            }
+        }
+            `;
+            document.head.appendChild(style);
+            
+            document.body.appendChild(welcomeDiv);
+            
+            setTimeout(() => {
+                welcomeDiv.remove();
+                style.remove();
+            }, 1500);
+        }
+        
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        function logout() {
+            currentUser = null;
+            gameMode = null;
+            isAdmin = false;
+            godMode = false;
+            
+            // Reset to login screen
+            loginMenu.style.display = 'flex';
+            gameModeMenu.style.display = 'none';
+            gameContainer.style.display = 'none';
+            userDisplay.style.display = 'none';
+            adminStatus.style.display = 'none';
+            adminPanel.style.display = 'none';
+            
+            // Clear email input
+            document.getElementById('emailInput').value = '';
+            
+            // Stop game loop
+            cancelAnimationFrame(gameLoop.animationId);
+        }
+        
+        function startSingleplayer() {
+            gameMode = 'singleplayer';
+            
+            // Hide game mode menu and show game
+            gameModeMenu.style.display = 'none';
+            gameContainer.style.display = 'block';
+            userDisplay.style.display = 'block';
+            
+            // Initialize game
+            initializeGame();
+        }
+        
+        function startMultiplayer() {
+            gameMode = 'multiplayer';
+            
+            // Hide game mode menu and show game
+            gameModeMenu.style.display = 'none';
+            gameContainer.style.display = 'block';
+            userDisplay.style.display = 'block';
+            
+            // For now, multiplayer will be the same as singleplayer
+            // In a real implementation, you would connect to a server here
+            alert('Multiplayer mode coming soon! Starting singleplayer for now.');
+            initializeGame();
+        }
+        
+function initializeGame() {
+            loadSavedProgress();
+            
+            // Give 1 million upgrade points
+            upgradePoints += 1000000;
+            
+            // Set speed to 100
+            player.baseSpeed = 100;
+            player.speed = 100;
+            
+            // Update world indicator and background
+            if (currentWorld > 1) {
+                worldIndicator.textContent = `World ${currentWorld}`;
+                worldIndicator.style.display = 'block';
+                updateWorldBackground();
+            }
+            
+            saveProgress();
+            updateUI();
+            
+            // Set initial enemy based on loaded level
+            if (level >= nextBossLevel) {
+                const bossLevel = Math.floor(level / 15) + 1;
+                enemy = new Boss(600, 200, bossLevel, currentWorld);
+                enemyTypeDisplay.textContent = `BOSS Lv.${bossLevel}`;
+            } else {
+                enemy = new Enemy(600, 200, level, currentWorld);
+                enemyTypeDisplay.textContent = 'Enemy';
+            }
+            
+            handleInput();
+            gameLoop();
+        }
+            
+            saveProgress();
+            updateUI();
+            
+            // Set initial enemy based on loaded level
+            if (level >= nextBossLevel) {
+                const bossLevel = Math.floor(level / 15) + 1;
+                enemy = new Boss(600, 200, bossLevel, currentWorld);
+                enemyTypeDisplay.textContent = `BOSS Lv.${bossLevel}`;
+            } else {
+                enemy = new Enemy(600, 200, level, currentWorld);
+                enemyTypeDisplay.textContent = 'Enemy';
+            }
+            
+            handleInput();
+            gameLoop();
+        }
+            
+            handleInput();
+            gameLoop();
+        }
+        
+        function loadUserProgress() {
+            // Load user-specific progress using email as key
+            const userKey = `user_${currentUser}_`;
+            const savedPoints = localStorage.getItem(userKey + 'savedUpgradePoints');
+            const savedLevel = localStorage.getItem(userKey + 'savedLevel');
+            const savedScore = localStorage.getItem(userKey + 'savedScore');
+            const savedGems = localStorage.getItem(userKey + 'savedGems');
+            const savedRebirths = localStorage.getItem(userKey + 'savedRebirths');
+            const savedShield = localStorage.getItem(userKey + 'savedShieldEffectiveness');
+            const savedBossBonus = localStorage.getItem(userKey + 'savedBossGemBonus');
+            const savedWorld = localStorage.getItem(userKey + 'savedWorld');
+            const savedPortalSpawned = localStorage.getItem(userKey + 'savedPortalSpawned');
+            
+            if (savedPoints) upgradePoints = parseInt(savedPoints);
+            if (savedLevel) level = parseInt(savedLevel);
+            if (savedScore) score = parseInt(savedScore);
+            if (savedGems) gems = parseInt(savedGems);
+            if (savedRebirths) rebirths = parseInt(savedRebirths);
+            if (savedShield) player.shieldEffectiveness = parseFloat(savedShield);
+            if (savedBossBonus) bossGemBonus = parseFloat(savedBossBonus);
+            if (savedWorld) currentWorld = parseInt(savedWorld);
+            if (savedPortalSpawned) portalSpawned = savedPortalSpawned === 'true';
+            
+            // Check for portal spawn on load
+            if (rebirths >= 67 && level >= 200 && !portalSpawned) {
+                spawnPortal();
+            }
+            
+            checkBadges();
+        }
+        
+        // Override saveProgress to use user-specific keys
+        const originalSaveProgress = saveProgress;
+        saveProgress = function() {
+            if (!currentUser) return;
+            
+            const userKey = `user_${currentUser}_`;
+            localStorage.setItem(userKey + 'savedUpgradePoints', upgradePoints);
+            localStorage.setItem(userKey + 'savedLevel', level);
+            localStorage.setItem(userKey + 'savedScore', score);
+            localStorage.setItem(userKey + 'savedGems', gems);
+            localStorage.setItem(userKey + 'savedRebirths', rebirths);
+            localStorage.setItem(userKey + 'savedShieldEffectiveness', player.shieldEffectiveness);
+            localStorage.setItem(userKey + 'savedBossGemBonus', bossGemBonus);
+            localStorage.setItem(userKey + 'savedWorld', currentWorld);
+            localStorage.setItem(userKey + 'savedPortalSpawned', portalSpawned);
+            
+            // Update high score
+            const currentHighScore = localStorage.getItem('highScore') || 0;
+            if (score > currentHighScore) {
+                localStorage.setItem('highScore', score);
+            }
+            
+            checkBadges();
+        };
+        
+        // Override loadSavedProgress to use user-specific loading
+        const originalLoadSavedProgress = loadSavedProgress;
+        loadSavedProgress = function() {
+            if (currentUser) {
+                loadUserProgress();
+            } else {
+                originalLoadSavedProgress();
+            }
+        };
+        
+        // Add enter key support for login when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailInput = document.getElementById('emailInput');
+            if (emailInput) {
+                emailInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        login();
+                    }
+                });
+            }
+        });
+        
+        // Admin functions
+        function toggleAdminPanel() {
+            if (!isAdmin) {
+                alert('Access denied! Admin privileges required.');
+                return;
+            }
+            
+            if (adminPanel.style.display === 'block') {
+                adminPanel.style.display = 'none';
+            } else {
+                adminPanel.style.display = 'block';
+                commandInput.focus();
+            }
+        }
+        
+        function closeAdminPanel() {
+            adminPanel.style.display = 'none';
+        }
+        
+        function addAdminLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            commandOutput.textContent = logEntry + commandOutput.textContent;
+        }
+        
+        function handleAdminCommand(event) {
+            if (event.key === 'Enter') {
+                executeAdminCommand();
+            }
+        }
+        
+        function executeAdminCommand() {
+            if (!isAdmin) {
+                alert('Access denied!');
+                return;
+            }
+            
+            const command = commandInput.value.trim().toLowerCase();
+            commandInput.value = '';
+            
+            if (!command) return;
+            
+            addAdminLog(`> ${command}`);
+            
+            const parts = command.split(' ');
+            const cmd = parts[0];
+            const args = parts.slice(1);
+            
+            switch(cmd) {
+                case 'help':
+                    addAdminLog('Available commands:');
+                    addAdminLog('  points <amount> - Add upgrade points');
+                    addAdminLog('  gems <amount> - Add gems');
+                    addAdminLog('  level <amount> - Set level');
+                    addAdminLog('  health <amount> - Set health');
+                    addAdminLog('  damage <amount> - Set damage');
+                    addAdminLog('  god - Toggle god mode');
+                    addAdminLog('  win - Instant win current level');
+                    addAdminLog('  boss <level> - Spawn boss');
+                    addAdminLog('  clear - Clear all data');
+                    addAdminLog('  users - List all users');
+                    addAdminLog('  reset - Reset current user');
+                    break;
+                    
+                case 'points':
+                    const points = parseInt(args[0]) || 1000;
+                    upgradePoints += points;
+                    addAdminLog(`Added ${points} upgrade points`);
+                    updateUI();
+                    saveProgress();
+                    break;
+                    
+                case 'gems':
+                    const gemAmount = parseInt(args[0]) || 100;
+                    gems += gemAmount;
+                    addAdminLog(`Added ${gemAmount} gems`);
+                    updateUI();
+                    saveProgress();
+                    break;
+                    
+                case 'level':
+                    const newLevel = parseInt(args[0]) || level + 1;
+                    level = Math.max(1, newLevel);
+                    addAdminLog(`Level set to ${level}`);
+                    updateUI();
+                    saveProgress();
+                    break;
+                    
+                case 'health':
+                    const health = parseInt(args[0]) || 1000000;
+                    player.baseMaxHealth = health;
+                    player.maxHealth = health;
+                    player.health = health;
+                    player.applyUpgrades();
+                    addAdminLog(`Health set to ${health}`);
+                    updateUI();
+                    saveProgress();
+                    break;
+                    
+                case 'damage':
+                    const damage = parseInt(args[0]) || 1000000;
+                    player.baseDamage = damage;
+                    player.attackDamage = damage;
+                    player.applyUpgrades();
+                    addAdminLog(`Damage set to ${damage}`);
+                    updateUI();
+                    saveProgress();
+                    break;
+                    
+                case 'god':
+                    toggleGodMode();
+                    break;
+                    
+                case 'win':
+                    instantWin();
+                    break;
+                    
+                case 'boss':
+                    const bossLevel = parseInt(args[0]) || Math.floor(level / 15) + 1;
+                    spawnBossLevel(bossLevel);
+                    break;
+                    
+                case 'clear':
+                    if (confirm('Are you sure you want to clear ALL user data? This cannot be undone!')) {
+                        clearAllData();
+                    }
+                    break;
+                    
+                case 'users':
+                    listUsers();
+                    break;
+                    
+                case 'reset':
+                    if (confirm('Reset current user progress?')) {
+                        resetCurrentUser();
+                    }
+                    break;
+                    
+                default:
+                    addAdminLog(`Unknown command: ${cmd}. Type 'help' for available commands.`);
+            }
+        }
+        
+        function addUpgradePoints() {
+            if (!isAdmin) return;
+            upgradePoints += 1000;
+            addAdminLog('Added 1000 upgrade points');
+            updateUI();
+            saveProgress();
+        }
+        
+        function addGems() {
+            if (!isAdmin) return;
+            gems += 100;
+            addAdminLog('Added 100 gems');
+            updateUI();
+            saveProgress();
+        }
+        
+        function maxStats() {
+            if (!isAdmin) return;
+            
+            player.baseMaxHealth = 1000000;
+            player.baseDamage = 1000000;
+            player.baseDefense = 1000000;
+            player.baseSpeed = 30;
+            player.baseAttackCooldown = 1;
+            
+            player.applyUpgrades();
+            player.health = player.maxHealth;
+            
+            upgradePoints = 999999;
+            gems = 99999;
+            
+            addAdminLog('Maxed all stats and resources');
+            updateUI();
+            saveProgress();
+        }
+        
+        function instantWin() {
+            if (!isAdmin) return;
+            
+            enemy.health = 0;
+            levelComplete();
+            addAdminLog('Instant win activated');
+        }
+        
+        function toggleGodMode() {
+            if (!isAdmin) return;
+            
+            godMode = !godMode;
+            
+            if (godMode) {
+                player.baseMaxHealth = 999999999;
+                player.maxHealth = 999999999;
+                player.health = 999999999;
+                player.baseDamage = 999999999;
+                player.baseDefense = 999999999;
+                player.applyUpgrades();
+                addAdminLog('God mode ENABLED - Invincible and Unlimited Damage');
+            } else {
+                player.baseMaxHealth = 200;
+                player.baseDamage = 20;
+                player.baseDefense = 0;
+                player.applyUpgrades();
+                player.health = player.maxHealth;
+                addAdminLog('God mode DISABLED');
+            }
+            
+            updateUI();
+            saveProgress();
+        }
+        
+        function spawnBoss() {
+            if (!isAdmin) return;
+            
+            const randomLevel = Math.floor(Math.random() * 20) + 1;
+            spawnBossLevel(randomLevel);
+        }
+        
+        function spawnBossLevel(bossLevel) {
+            enemy = new Boss(600, 200, bossLevel, currentWorld);
+            enemyTypeDisplay.textContent = `BOSS Lv.${bossLevel}`;
+            addAdminLog(`Spawned Boss Level ${bossLevel}`);
+        }
+        
+        function clearAllData() {
+            if (!isAdmin) return;
+            
+            // Clear all localStorage
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith('user_') || key === 'highScore') {
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            addAdminLog('Cleared all user data from localStorage');
+        }
+        
+        function showJoinHistory() {
+            if (!isAdmin) {
+                alert('Access denied! Admin privileges required.');
+                return;
+            }
+            
+            const historyDiv = document.createElement('div');
+            historyDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.95);
+                color: white;
+                padding: 30px;
+                border-radius: 15px;
+                border: 3px solid #ff6b6b;
+                z-index: 6000;
+                max-width: 500px;
+                max-height: 400px;
+                overflow-y: auto;
+                box-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
+            `;
+            
+            let historyHTML = '<h2 style="color: #ff6b6b; margin-top: 0;">👥 User Join History</h2>';
+            
+            if (joinHistory.length === 0) {
+                historyHTML += '<p style="color: #aaa;">No users have joined yet.</p>';
+            } else {
+                historyHTML += '<div style="margin-bottom: 15px;">';
+                joinHistory.slice().reverse().forEach((join, index) => {
+                    historyHTML += `
+                        <div style="
+                            background: rgba(255, 107, 107, 0.1);
+                            padding: 10px;
+                            margin: 5px 0;
+                            border-radius: 5px;
+                            border-left: 3px solid #ff6b6b;
+                            font-size: 12px;
+                        ">
+                            <strong>#${joinHistory.length - index}</strong> - ${join.username}<br>
+                            📧 ${join.email}<br>
+                            🕐 ${join.timestamp}
+                        </div>
+                    `;
+                });
+                historyHTML += '</div>';
+            }
+            
+            historyHTML += `
+                <div style="margin-top: 20px; text-align: center;">
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="padding: 10px 20px; background: #ff6b6b; color: white; 
+                                   border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        Close History
+                    </button>
+                </div>
+            `;
+            
+            historyDiv.innerHTML = historyHTML;
+            document.body.appendChild(historyDiv);
+        }
+        
+        function listUsers() {
+            if (!isAdmin) return;
+            
+            const users = new Set();
+            const keys = Object.keys(localStorage);
+            
+            keys.forEach(key => {
+                if (key.startsWith('user_') && key.includes('_savedLevel')) {
+                    const email = key.replace('user_', '').replace('_savedLevel', '');
+                    users.add(email);
+                }
+            });
+            
+            addAdminLog(`Found ${users.size} users:`);
+            users.forEach(user => {
+                const userLevel = localStorage.getItem(`user_${user}_savedLevel`) || '1';
+                const userScore = localStorage.getItem(`user_${user}_savedScore`) || '0';
+                addAdminLog(`  ${user} - Level: ${userLevel}, Score: ${userScore}`);
+            });
+        }
+        
+        function resetCurrentUser() {
+            if (!isAdmin || !currentUser) return;
+            
+            const userKey = `user_${currentUser}_`;
+            const keys = Object.keys(localStorage);
+            
+            keys.forEach(key => {
+                if (key.startsWith(userKey)) {
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            // Reset current game state
+            level = 1;
+            score = 0;
+            upgradePoints = 0;
+            gems = 0;
+            rebirths = 0;
+            
+            player.baseMaxHealth = 200;
+            player.baseDamage = 20;
+            player.baseDefense = 0;
+            player.baseSpeed = 5;
+            player.baseAttackCooldown = 30;
+            player.applyUpgrades();
+            player.health = player.maxHealth;
+            
+            enemy = new Enemy(600, 200, level, currentWorld);
+            enemyTypeDisplay.textContent = 'Enemy';
+            
+            addAdminLog(`Reset user: ${currentUser}`);
+            updateUI();
+        }
+        
+        // Override player takeDamage for god mode
+        const originalTakeDamage = Fighter.prototype.takeDamage;
+        Fighter.prototype.takeDamage = function(damage) {
+            if (godMode && this.isPlayer) {
+                return 0; // No damage in god mode
+            }
+            return originalTakeDamage.call(this, damage);
+        };
+        
+        // Add J key to toggle admin panel
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'j' && isAdmin) {
+                e.preventDefault();
+                toggleAdminPanel();
+            }
+        });
+        
+        // Initialize login screen when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            loginMenu.style.display = 'flex';
+            gameModeMenu.style.display = 'none';
+            gameContainer.style.display = 'none';
+            userDisplay.style.display = 'none';
+            adminStatus.style.display = 'none';
+            adminPanel.style.display = 'none';
+            worldIndicator.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
